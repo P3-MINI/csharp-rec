@@ -1,0 +1,69 @@
+
+name: .NET Core Publish
+
+on:
+  push:
+    branches: [ master ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Setup .NET Core
+      uses: actions/setup-dotnet@v1
+      with:
+        dotnet-version: '8.0.x'
+
+    - name: Install dependencies
+      run: dotnet restore
+
+    - name: Install zip
+      run: sudo apt-get install zip
+
+    - name: Build and publish (Linux)
+      run: dotnet publish -c Release -r linux-x64 --self-contained
+
+    - name: Build and publish (Windows)
+      run: dotnet publish -c Release -r win-x64 --self-contained
+
+    - name: Compress Windows artifact
+      run: zip -r p3-rec-win-x64.zip ./p3-rec/bin/Release/net8.0/win-x64/publish
+
+    - name: Compress Linux artifact
+      run: tar -czvf p3-rec-linux-x64.tar.gz -C ./p3-rec/bin/Release/net8.0/linux-x64/publish . 
+
+    - name: Create Release
+      id: create_release
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: ${{ github.run_number }}
+        release_name: Release ${{ github.run_number }}
+        draft: false
+        prerelease: false
+
+    - name: Upload Release Asset (Linux)
+      id: upload-release-asset-linux
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: ./p3-rec-linux-x64.tar.gz
+        asset_name: p3-rec-linux-x64.tar.gz
+        asset_content_type: application/octet-stream
+
+    - name: Upload Release Asset (Windows)
+      id: upload-release-asset-windows
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: ./p3-rec-win-x64.zip
+        asset_name: p3-rec-win-x64.zip
+        asset_content_type: application/vnd.microsoft.portable-executable
