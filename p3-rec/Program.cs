@@ -7,13 +7,13 @@ string recordingPath;
 string[] ffmpegArgs;
 if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
 {
-    recordingPath = $"/home2/samba/spychalam/public/recordings/{GetFileName(user)}";
-    ffmpegArgs = ["-framerate", "1", "-f", "x11grab", "-i", ":0.0", "-c:v", "libx264", "-g", "10", "-keyint_min", "10", "-preset", "fast", "-f", "mpegts", recordingPath];
+    recordingPath = $"/home2/samba/spychalam/recordings/{GetFileName(user)}";
+    ffmpegArgs = ["-framerate", "1", "-f", "x11grab", "-i", ":0.0", "-c:v", "libx264", "-g", "10", "-keyint_min", "10", "-preset", "fast", "-f", "mpegts", "-y", "-loglevel", "quiet", recordingPath];
 }
 else if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
 {
-    recordingPath = $"Z:\\spychalam\\public\\recordings\\{GetFileName(user)}";
-    ffmpegArgs = ["-framerate", "1", "-f", "gdigrab", "-i", "desktop", "-c:v", "libx264", "-g", "10", "-keyint_min", "10", "-preset", "fast", "-f", "mpegts", recordingPath];
+    recordingPath = $"Z:\\spychalam\\recordings\\{GetFileName(user)}";
+    ffmpegArgs = ["-framerate", "1", "-f", "gdigrab", "-i", "desktop", "-c:v", "libx264", "-g", "10", "-keyint_min", "10", "-preset", "fast", "-f", "mpegts", "-y", "-loglevel", "quiet", recordingPath];
 }
 else
 {
