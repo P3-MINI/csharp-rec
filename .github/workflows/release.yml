@@ -1,4 +1,3 @@
-
 name: .NET Core Publish
 
 on:
@@ -7,7 +6,10 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
 
     steps:
     - uses: actions/checkout@v2
@@ -20,20 +22,35 @@ jobs:
     - name: Install dependencies
       run: dotnet restore
 
-    - name: Install zip
-      run: sudo apt-get install zip
+    - name: Build and publish
+      run: dotnet publish -c Release -r ${{ matrix.os == 'windows-latest' && 'win-x64' || 'linux-x64' }} --self-contained
 
-    - name: Build and publish (Linux)
-      run: dotnet publish -c Release -r linux-x64 --self-contained
+    - name: Compress artifact
+      if: matrix.os == 'ubuntu-latest'
+      run: tar -czvf p3-rec-linux-x64.tar.gz -C ./p3-rec/bin/Release/net9.0/linux-x64/publish .
+    
+    - name: Compress artifact
+      if: matrix.os == 'windows-latest'
+      run: 7z a p3-rec-win-x64.zip .\p3-rec\bin\Release\net9.0\win-x64\publish\*
 
-    - name: Build and publish (Windows)
-      run: dotnet publish -c Release -r win-x64 --self-contained
+    - name: Upload artifact
+      uses: actions/upload-artifact@v2
+      with:
+        name: p3-rec-${{ matrix.os }}
+        path: p3-rec-${{ matrix.os == 'windows-latest' && 'win-x64.zip' || 'linux-x64.tar.gz' }}
 
-    - name: Compress Windows artifact
-      run: zip -r p3-rec-win-x64.zip ./p3-rec/bin/Release/net8.0/win-x64/publish
-
-    - name: Compress Linux artifact
-      run: tar -czvf p3-rec-linux-x64.tar.gz -C ./p3-rec/bin/Release/net8.0/linux-x64/publish . 
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/download-artifact@v2
+      with:
+        name: p3-rec-ubuntu-latest
+        path: .
+    - uses: actions/download-artifact@v2
+      with:
+        name: p3-rec-windows-latest
+        path: .
 
     - name: Create Release
       id: create_release
@@ -66,4 +83,4 @@ jobs:
         upload_url: ${{ steps.create_release.outputs.upload_url }}
         asset_path: ./p3-rec-win-x64.zip
         asset_name: p3-rec-win-x64.zip
-        asset_content_type: application/vnd.microsoft.portable-executable
+        asset_content_type: application/zip
