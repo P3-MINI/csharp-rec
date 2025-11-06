@@ -47,6 +47,11 @@ jobs:
       with:
         name: p3-rec-windows-latest
         path: .
+        
+    - uses: actions/download-artifact@v4
+      with:
+        name: p3-rec-ubuntu-latest
+        path: .
 
     - name: Create Release
       id: create_release
