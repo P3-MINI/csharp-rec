@@ -1,0 +1,87 @@
+name: .NET Core Publish
+
+on:
+  push:
+    branches: [ master ]
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Setup .NET Core
+      uses: actions/setup-dotnet@v3
+      with:
+        dotnet-version: '9.0.x'
+
+    - name: Install dependencies
+      run: dotnet restore
+
+    - name: Build and publish
+      run: dotnet publish -c Release -r ${{ matrix.os == 'windows-latest' && 'win-x64' || 'linux-x64' }} --self-contained
+
+    - name: Compress artifact
+      if: matrix.os == 'ubuntu-latest'
+      run: tar -czvf p3-rec-linux-x64.tar.gz -C ./p3-rec/bin/Release/net9.0/linux-x64/publish .
+    
+    - name: Compress artifact
+      if: matrix.os == 'windows-latest'
+      run: 7z a p3-rec-win-x64.zip .\p3-rec\bin\Release\net9.0\win-x64\publish\*
+
+    - name: Upload artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: p3-rec-${{ matrix.os }}
+        path: p3-rec-${{ matrix.os == 'windows-latest' && 'win-x64.zip' || 'linux-x64.tar.gz' }}
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/download-artifact@v4
+      with:
+        name: p3-rec-windows-latest
+        path: .
+        
+    - uses: actions/download-artifact@v4
+      with:
+        name: p3-rec-ubuntu-latest
+        path: .
+
+    - name: Create Release
+      id: create_release
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: ${{ github.run_number }}
+        release_name: Release ${{ github.run_number }}
+        draft: false
+        prerelease: false
+
+    - name: Upload Release Asset (Linux)
+      id: upload-release-asset-linux
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: ./p3-rec-linux-x64.tar.gz
+        asset_name: p3-rec-linux-x64.tar.gz
+        asset_content_type: application/octet-stream
+
+    - name: Upload Release Asset (Windows)
+      id: upload-release-asset-windows
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: ./p3-rec-win-x64.zip
+        asset_name: p3-rec-win-x64.zip
+        asset_content_type: application/zip
