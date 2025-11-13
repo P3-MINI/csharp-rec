@@ -1,12 +1,13 @@
 using System;
-using System.Threading;
 using Avalonia.Media;
 using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Messaging;
 using P3RecorderStatus.Models;
+using P3RecorderStatus.ViewModels.Messages;
 
 namespace P3RecorderStatus.ViewModels;
 
-public partial class StudentViewModel : ViewModelBase, IDisposable
+public partial class StudentViewModel : ViewModelBase, IDisposable, IRecipient<LastUpdatedChangedMessage>
 {
     [ObservableProperty]
     private string _userName;
@@ -24,14 +25,16 @@ public partial class StudentViewModel : ViewModelBase, IDisposable
     private int _album;
     
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(Status))]
+    [NotifyPropertyChangedFor(nameof(StatusColor))]
     private DateTime _lastUpdate;
 
-    public string Status => DateTime.Now - LastUpdate < TimeSpan.FromMinutes(2) ? "Online" : "Offline";
+    private DateTime? _mainWindowLastUpdate;
+
+    public string Status => (_mainWindowLastUpdate ?? DateTime.MinValue) - LastUpdate < TimeSpan.FromSeconds(20) ? "Online" : "Offline";
     public IBrush StatusColor => Status == "Online" ? Brushes.LawnGreen : Brushes.Red;
 
     public Student Student => new() { UserName = UserName, LastUpdate = LastUpdate, Name = Name, Surname = Surname, Groups = Groups, Album = Album};
-
-    private readonly Timer? _timer;
 
     public StudentViewModel(Student student)
     {
@@ -41,16 +44,19 @@ public partial class StudentViewModel : ViewModelBase, IDisposable
         _surname = student.Surname;
         _groups = student.Groups;
         _album = student.Album;
-        _timer = new Timer(_ =>
-        {
-            OnPropertyChanged(nameof(Status));
-            OnPropertyChanged(nameof(StatusColor));
-        }, null, TimeSpan.Zero, TimeSpan.FromSeconds(5));
+        WeakReferenceMessenger.Default.Register(this);
     }
     
     public void Dispose()
     {
         GC.SuppressFinalize(this);
-        _timer?.Dispose();
+        WeakReferenceMessenger.Default.UnregisterAll(this);
+    }
+
+    public void Receive(LastUpdatedChangedMessage message)
+    {
+        _mainWindowLastUpdate = message.Value;
+        OnPropertyChanged(nameof(Status));
+        OnPropertyChanged(nameof(StatusColor));
     }
 }

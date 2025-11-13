@@ -10,9 +10,11 @@ using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Platform.Storage;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using CommunityToolkit.Mvvm.Messaging;
 using CsvHelper;
 using CsvHelper.Configuration;
 using P3RecorderStatus.Models;
+using P3RecorderStatus.ViewModels.Messages;
 using Renci.SshNet;
 
 namespace P3RecorderStatus.ViewModels;
@@ -46,7 +48,7 @@ public partial class MainWindowViewModel : ViewModelBase
 
     private void StartFetching()
     {
-        _fetchTimer = new Timer(async void (_) => await FetchStudentsAsync(), null, TimeSpan.FromSeconds(5), TimeSpan.FromSeconds(30));
+        _fetchTimer = new Timer(async void (_) => await FetchStudentsAsync(), null, TimeSpan.FromSeconds(5), TimeSpan.FromSeconds(10));
     }
 
     [RelayCommand]
@@ -139,18 +141,36 @@ public partial class MainWindowViewModel : ViewModelBase
 
             await Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(() =>
             {
-                foreach (var student in Students)
+                var existingStudents = Students.ToDictionary(s => s.UserName);
+                var fetchedStudents = students.ToDictionary(s => s.UserName);
+
+                foreach (var fetchedStudent in fetchedStudents.Values)
                 {
-                    student.Dispose();
-                }
-                Students.Clear();
-                
-                foreach (var student in students)
-                {
-                    Students.Add(new StudentViewModel(student));
+                    if (existingStudents.TryGetValue(fetchedStudent.UserName, out var existingStudent))
+                    {
+                        existingStudent.LastUpdate = fetchedStudent.LastUpdate;
+                        existingStudent.Name = fetchedStudent.Name;
+                        existingStudent.Surname = fetchedStudent.Surname;
+                        existingStudent.Groups = fetchedStudent.Groups;
+                    }
+                    else
+                    {
+                        Students.Add(new StudentViewModel(fetchedStudent));
+                    }
                 }
 
-                LastUpdated = DateTime.UtcNow;
+                var studentsToRemove = existingStudents.Keys.Except(fetchedStudents.Keys).ToList();
+                foreach (var userNameToRemove in studentsToRemove)
+                {
+                    if (existingStudents.TryGetValue(userNameToRemove, out var studentToRemove))
+                    {
+                        studentToRemove.Dispose();
+                        Students.Remove(studentToRemove);
+                    }
+                }
+
+                LastUpdated = DateTime.Now;
+                WeakReferenceMessenger.Default.Send(new LastUpdatedChangedMessage(LastUpdated));
             });
         }
         catch (Exception e)
