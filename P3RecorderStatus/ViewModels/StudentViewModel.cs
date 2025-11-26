@@ -31,7 +31,7 @@ public partial class StudentViewModel : ViewModelBase, IDisposable, IRecipient<L
 
     private DateTime? _mainWindowLastUpdate;
 
-    public string Status => (_mainWindowLastUpdate ?? DateTime.MinValue) - LastUpdate < TimeSpan.FromSeconds(20) ? "Online" : "Offline";
+    public string Status => (_mainWindowLastUpdate ?? DateTime.MinValue) - LastUpdate < TimeSpan.FromSeconds(60) ? "Online" : "Offline";
     public IBrush StatusColor => Status == "Online" ? Brushes.LawnGreen : Brushes.Red;
 
     public Student Student => new() { UserName = UserName, LastUpdate = LastUpdate, Name = Name, Surname = Surname, Groups = Groups, Album = Album};
