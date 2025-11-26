@@ -1,0 +1,52 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:P3RecorderStatus.ViewModels"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+        x:Class="P3RecorderStatus.Views.MainWindow"
+        x:DataType="vm:MainWindowViewModel"
+        Icon="/Assets/avalonia-logo.ico"
+        Title="P3RecorderStatus"
+        Width="800" Height="800" MinWidth="320" MinHeight="480"
+        >
+    <Design.DataContext>
+        <!-- This only sets the DataContext for the previewer in an IDE,
+             to set the actual DataContext for runtime, set the DataContext property in code (look at App.axaml.cs) -->
+        <vm:MainWindowViewModel />
+    </Design.DataContext>
+    <Grid RowDefinitions="Auto,*,Auto" Margin="10">
+        <StackPanel Grid.Row="0" Orientation="Vertical" Spacing="10">
+            <TextBlock Text="SSH Connection" />
+            <Grid ColumnDefinitions="Auto, *" RowDefinitions="Auto, Auto, Auto" Margin="10" ColumnSpacing="10" RowSpacing="5">
+                <TextBlock Grid.Row="0" Grid.Column="0" Text="Host:" VerticalAlignment="Center" />
+                <TextBox Grid.Row="0" Grid.Column="1" Text="{Binding SshConnection.Host}" />
+                <TextBlock Grid.Row="1" Grid.Column="0" Text="User:" VerticalAlignment="Center"  />
+                <TextBox Grid.Row="1" Grid.Column="1" Text="{Binding SshConnection.User}" />
+                <TextBlock Grid.Row="2" Grid.Column="0" Text="Password:" VerticalAlignment="Center"  />
+                <TextBox Grid.Row="2" Grid.Column="1" Text="{Binding SshConnection.Password}" PasswordChar="*" />
+            </Grid>
+        </StackPanel>
+        <DataGrid Grid.Row="1" ItemsSource="{Binding Students}" AutoGenerateColumns="False">
+            <DataGrid.Columns>
+                <DataGridTextColumn Header="Username" Binding="{Binding UserName}" />
+                <DataGridTextColumn Header="Name" Binding="{Binding Name}" />
+                <DataGridTextColumn Header="Surname" Binding="{Binding Surname}" />
+                <DataGridTextColumn Header="Album" Binding="{Binding Album}" />
+                <DataGridTextColumn Header="Groups" Binding="{Binding Groups}" />
+                <DataGridTextColumn Header="LastUpdate" Binding="{Binding LastUpdate, StringFormat='yyyy-MM-dd HH:mm:ss'}" />
+                <DataGridTemplateColumn Header="Status">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <TextBlock TextAlignment="Center" Text="{Binding Status}" Foreground="{Binding StatusColor}" />
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+            </DataGrid.Columns>
+        </DataGrid>
+        <DockPanel Grid.Row="2" Margin="10">
+            <Button Content="Load Filter" Command="{Binding LoadStudentsCommand}" />
+            <TextBlock HorizontalAlignment="Right" Text="{Binding LastUpdated, StringFormat='Last Updated: {0:T}'}" IsVisible="{Binding LastUpdated, Converter={x:Static ObjectConverters.IsNotNull}}" />
+        </DockPanel>
+    </Grid>
+</Window>

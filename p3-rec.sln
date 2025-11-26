@@ -2,6 +2,8 @@
 Microsoft Visual Studio Solution File, Format Version 12.00
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "p3-rec", "p3-rec\p3-rec.csproj", "{F8A846CF-791B-499B-8936-DD8C85A18AA1}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "P3RecorderStatus", "P3RecorderStatus\P3RecorderStatus.csproj", "{2449EE94-2A71-42F0-B899-78F4042C2082}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -12,5 +14,9 @@ Global
 		{F8A846CF-791B-499B-8936-DD8C85A18AA1}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{F8A846CF-791B-499B-8936-DD8C85A18AA1}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{F8A846CF-791B-499B-8936-DD8C85A18AA1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2449EE94-2A71-42F0-B899-78F4042C2082}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2449EE94-2A71-42F0-B899-78F4042C2082}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2449EE94-2A71-42F0-B899-78F4042C2082}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2449EE94-2A71-42F0-B899-78F4042C2082}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
